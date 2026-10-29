@@ -2,70 +2,275 @@
 {% extends "finance/base.html" %}
 
 {% block content %}
-<h1>Personal Finance Dashboard</h1>
+<div class="container py-4">
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h5>Total Income</h5>
-            <h3>{{ income }}</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Financial Dashboard</h2>
+            <p class="text-muted mb-0">
+                Welcome, {{ request.user.username }}!
+            </p>
+        </div>
+        <a href="{% url 'add_transaction' %}" class="btn btn-primary">
+            + Add Transaction
+        </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total Income</p>
+                    <h4 class="text-success">
+                        ₹{{ income|default:0|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total Expenses</p>
+                    <h4 class="text-danger">
+                        ₹{{ expenses|default:0|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Current Balance</p>
+                    <h4 class="{% if balance < 0 %}text-danger{% else %}text-primary{% endif %}">
+                        ₹{{ balance|default:0|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">This Month's Expenses</p>
+                    <h4 class="text-warning">
+                        ₹{{ monthly_expenses|default:0|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        Monthly Expenses
+                    </h5>
+                    <div style="height: 300px;">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        Expenses by Category
+                    </h5>
+                    <div style="height: 300px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <p id="noCategoryData"
+                       class="text-muted text-center mt-3"
+                       style="display: none;">
+                        No expense categories to display yet.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Recent Transactions</h5>
+                <a href="{% url 'add_transaction' %}"
+                   class="btn btn-outline-primary btn-sm">
+                    Add New
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th class="text-end">Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.title|default:"Transaction" }}</td>
+                            <td>
+                                {% if transaction.category %}
+                                    {{ transaction.category.name }}
+                                {% else %}
+                                    Uncategorized
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.date|date:"d M Y" }}</td>
+                            <td>
+                                {% if transaction.type == "income" %}
+                                    <span class="badge bg-success">Income</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Expense</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                ₹{{ transaction.amount|floatformat:2 }}
+                            </td>
+                            <td>
+                            {% comment %} <td>
+                                <a href="{% url 'edit_transaction' transaction.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Edit
+                                </a> {% endcomment %}
+                                <a href="{% url 'delete_transaction' transaction.pk %}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No transactions yet. Add your first transaction!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h5>Total Expenses</h5>
-            <h3>{{ expenses }}</h3>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card p-3">
-            <h5>Balance</h5>
-            <h3>{{ balance }}</h3>
-        </div>
-    </div>
 </div>
 
-<a href="{% url 'add_transaction' %}"
-   class="btn btn-primary mb-3">
-    Add Transaction
-</a>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Amount</th>
-            <th>Type</th>
-            <th>Date</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+<!-- Safely encode chart data as JSON -->
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_values|json_script:"chart-values" }}
 
-    <tbody>
-        {% for transaction in transactions %}
-        <tr>
-            <td>{{ transaction.title }}</td>
-            <td>{{ transaction.amount }}</td>
-            <td>{{ transaction.get_type_display }}</td>
-            <td>{{ transaction.date }}</td>
-            <td>
-                <form method="post"
-                      action="{% url 'delete_transaction' transaction.pk %}">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="btn btn-danger btn-sm">
-                        Delete
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">No transactions yet.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const labelsElement = document.getElementById("chart-labels");
+    const valuesElement = document.getElementById("chart-values");
+
+    const monthLabels = labelsElement
+        ? JSON.parse(labelsElement.textContent)
+        : [];
+
+    const monthValues = valuesElement
+        ? JSON.parse(valuesElement.textContent)
+        : [];
+
+    // Monthly expenses chart
+    const monthlyCanvas = document.getElementById("monthlyChart");
+
+    if (monthlyCanvas) {
+        new Chart(monthlyCanvas, {
+            type: "bar",
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: "Expenses (₹)",
+                    data: monthValues,
+                    backgroundColor: "rgba(54, 162, 235, 0.6)",
+                    borderColor: "rgb(54, 162, 235)",
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Category chart.
+    // Category data is provided as individual HTML data attributes
+    // instead of serializing a Django QuerySet.
+    const categoryElements = document.querySelectorAll(
+        ".category-chart-data"
+    );
+
+    const categoryLabels = [];
+    const categoryValues = [];
+
+    categoryElements.forEach(function (element) {
+        categoryLabels.push(element.dataset.label);
+        categoryValues.push(Number(element.dataset.amount || 0));
+    });
+
+    const categoryCanvas = document.getElementById("categoryChart");
+    const noCategoryMessage = document.getElementById("noCategoryData");
+
+    if (categoryLabels.length > 0 && categoryCanvas) {
+        new Chart(categoryCanvas, {
+            type: "doughnut",
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryValues,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    } else if (noCategoryMessage) {
+        noCategoryMessage.style.display = "block";
+    }
+});
+</script>
+
+<!-- Category data: values are escaped by Django's template engine -->
+<div hidden aria-hidden="true">
+    {% for item in category_expenses %}
+        <span
+            class="category-chart-data"
+            data-label="{{ item.category__name|default:'Uncategorized' }}"
+            data-amount="{{ item.total|default:0 }}">
+        </span>
+    {% endfor %}
+</div>
+
 {% endblock %}

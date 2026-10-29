@@ -30,6 +30,8 @@
                    href="{% url 'add_transaction' %}">
                     Add Transaction
                 </a>
+                <a href="{% url 'category_list' %}" class="btn btn-outline-light btn-sm">
+                Categories</a>
 
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
