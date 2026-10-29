@@ -1,0 +1,38 @@
+
+{% extends "finance/base.html" %}
+
+{% block title %}Delete Transaction | Smart Finance{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="text-danger">Delete Transaction?</h2>
+
+                <p class="mt-3">
+                    Are you sure you want to delete
+                    <strong>{{ transaction.title }}</strong>?
+                </p>
+
+                <p>
+                    Amount: {{ transaction.amount }}
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-danger">
+                        Yes, Delete
+                    </button>
+
+                    <a href="{% url 'dashboard' %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
