@@ -6,10 +6,9 @@ from datetime import date
 from .forms import TransactionForm,CategoryForm
 from .models import Transaction,Category
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login,logout
 from .forms import RegistrationForm
 from django.db.models.functions import TruncMonth
-
 
 
 
@@ -20,11 +19,14 @@ def register(request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request,"Account created successfully. Please log in.",)
-            return redirect("login")
+            login(request, user)
+            messages.success(request,"Account created successfully!")
+            return redirect("dashboard")
+
     else:
         form = RegistrationForm()
-    return render(request,"registration/register.html",{"form": form},)
+
+    return render(request,"registration/register.html",{"form": form})
 
 @login_required
 def dashboard(request):
@@ -220,3 +222,11 @@ def delete_category(request, pk):
         return redirect("category_list")
 
     return render(request,"finance/category_confirm_delete.html",{"category": category},)
+
+@login_required
+def user_logout(request):
+    if request.method == "POST":
+        logout(request)
+        return redirect("login")
+
+    return redirect("dashboard")

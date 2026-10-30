@@ -28,7 +28,7 @@
                 <thead>
                     <tr>
                         <th>Category</th>
-                        <th>Type</th>
+                        {% comment %} <th>Type</th> {% endcomment %}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -37,7 +37,7 @@
                     {% for category in categories %}
                     <tr>
                         <td>{{ category.name }}</td>
-                        <td>{{ category.type|title }}</td>
+                        {% comment %} <td>{{ category.type|title }}</td> {% endcomment %}
                         <td>
                             <a href="{% url 'edit_category' category.pk %}"
                                class="btn btn-sm btn-warning">
